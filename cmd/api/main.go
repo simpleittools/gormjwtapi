@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/joho/godotenv"
+	auth "github.com/korylprince/go-ad-auth/v3"
 	"github.com/simpleittools/gormjwtapi/internal/database"
 	"github.com/simpleittools/gormjwtapi/internal/models"
 	"log"
@@ -37,16 +38,8 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	database.Conn()
 
-	//dsn := os.Getenv("DSN")
-	//environment := os.Getenv("ENV")
-	//db, err := driver.ConnectPostgres(dsn)
-	//
-	//if err != nil {
-	//	log.Fatal("Cannot connect to database")
-	//}
-	//defer db.SQL.Close()
+	database.Conn()
 
 	app := &application{
 		config:   cfg,
@@ -56,6 +49,36 @@ func main() {
 		//environment: environment,
 	}
 
+	authType := os.Getenv("AUTHTYPE")
+	switch authType {
+	case "INTERNAL":
+		app.infoLog.Println("auth is internal")
+	case "LDAP":
+		// todo configure the application to use LDAP, currently this is just setup a a framework
+		portNumber, _ := strconv.Atoi(os.Getenv("LDAPPORT"))
+		authConfig := &auth.Config{
+			Server:   os.Getenv("LDAPSERVER"),
+			Port:     portNumber,
+			BaseDN:   os.Getenv("LDAPBASEDN"),
+			Security: auth.SecurityStartTLS,
+		}
+		username := os.Getenv("LDAPUSERNAME")
+		password := os.Getenv("LDAPPASSWORD")
+
+		status, err := auth.Authenticate(authConfig, username, password)
+
+		if err != nil {
+			//handle err
+			return
+		}
+
+		if !status {
+			//handle failed authentication
+			return
+		}
+	default:
+		app.errorLog.Fatal("authentication type improperly configured. options are LDAP or INTERNAL")
+	}
 	err = app.serve()
 
 	if err != nil {
