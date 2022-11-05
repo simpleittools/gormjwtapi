@@ -1,0 +1,5 @@
+PORT=9000
+DB_ENGINE=SQLITE
+POSTGRESDSN="host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai"
+MYSQLDSN="user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+SQLITEDBNAME="./db-data/forms.db"
